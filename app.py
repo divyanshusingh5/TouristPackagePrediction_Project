@@ -1,200 +1,113 @@
-from typing import Optional
-
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from uvicorn import run as app_run
-
-from tourism.components.model_predictor import ModelPredictor, TourismData
-from tourism.constant import APP_HOST, APP_PORT
-from tourism.pipeline.train_pipeline import TrainPipeline
-
-app = FastAPI()
-
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# config = read_params()
-
-templates = Jinja2Templates(directory="templates")
-
-
-origins = ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# TOURISM_DATA_KEY = "tourism_data"
-
-# TOURISM_VALUE_KEY = "tourism_value"
-
-# utils = MainUtils()
-
-
-class DataForm:
-    def __init__(self, request: Request):
-        self.request: Request = request
-
-        self.Age: Optional[float] = None
-
-        self.CityTier: Optional[int] = None
-
-        self.DurationOfPitch: Optional[float] = None
-
-        self.NumberOfPersonVisiting: Optional[int] = None
-
-        self.NumberOfFollowups: Optional[float] = None
-
-        self.PreferredPropertyStar: Optional[float] = None
-
-        self.NumberOfTrips: Optional[float] = None
-
-        self.Passport: Optional[int] = None
-
-        self.PitchSatisfactionScore: Optional[int] = None
-
-        self.OwnCar: Optional[int] = None
-
-        self.NumberOfChildrenVisiting: Optional[float] = None
-
-        self.MonthlyIncome: Optional[float] = None
-
-        self.TypeofContact: Optional[str] = None
-
-        self.Occupation: Optional[str] = None
-
-        self.Gender: Optional[str] = None
-
-        self.ProductPitched: Optional[str] = None
-
-        self.MaritalStatus: Optional[str] = None
-
-        self.Designation: Optional[str] = None
-
-    async def get_tourism_data(self):
-        form = await self.request.form()
-
-        self.Age = form.get("Age")
-
-        self.CityTier = form.get("CityTier")
-
-        self.DurationOfPitch = form.get("DurationOfPitch")
-
-        self.NumberOfPersonVisiting = form.get("NumberOfPersonVisiting")
-
-        self.NumberOfFollowups = form.get("NumberOfFollowups")
-
-        self.PreferredPropertyStar = form.get("PreferredPropertyStar")
-
-        self.NumberOfTrips = form.get("NumberOfTrips")
-
-        self.Passport = form.get("Passport")
-
-        self.PitchSatisfactionScore = form.get("PitchSatisfactionScore")
-
-        self.OwnCar = form.get("OwnCar")
-
-        self.NumberOfChildrenVisiting = form.get("NumberOfChildrenVisiting")
-
-        self.MonthlyIncome = form.get("MonthlyIncome")
-
-        self.TypeofContact = form.get("TypeofContact")
-
-        self.Occupation = form.get("Occupation")
-
-        self.Gender = form.get("Gender")
-
-        self.ProductPitched = form.get("ProductPitched")
-
-        self.MaritalStatus = form.get("MaritalStatus")
-
-        self.Designation = form.get("Designation")
-
-
-@app.get("/")
-async def predictGetRouteClient(request: Request):
-    try:
-
-        return templates.TemplateResponse(
-            "index.html",
-            {
-                "request": request,
-                "context": "Fill all the fields for getting accurate results...",
-            },
-        )
-
-    except Exception as e:
-        return Response(f"Error Occurred! {e}")
-
-
-@app.post("/")
-async def predictPostRouteClient(request: Request):
-    try:
-        form = DataForm(request)
-
-        await form.get_tourism_data()
-
-        tourism_data = TourismData(
-            Age=form.Age,
-            CityTier=form.CityTier,
-            DurationOfPitch=form.DurationOfPitch,
-            NumberOfPersonVisiting=form.NumberOfPersonVisiting,
-            NumberOfFollowups=form.NumberOfFollowups,
-            PreferredPropertyStar=form.PreferredPropertyStar,
-            NumberOfTrips=form.NumberOfTrips,
-            Passport=form.Passport,
-            PitchSatisfactionScore=form.PitchSatisfactionScore,
-            OwnCar=form.OwnCar,
-            NumberOfChildrenVisiting=form.NumberOfChildrenVisiting,
-            MonthlyIncome=form.MonthlyIncome,
-            TypeofContact=form.TypeofContact,
-            Occupation=form.Occupation,
-            Gender=form.Gender,
-            ProductPitched=form.ProductPitched,
-            MaritalStatus=form.MaritalStatus,
-            Designation=form.Designation,
-        )
-
-        tourism_df = tourism_data.get_tourism_as_dict()
-
-        tourism_predictor = ModelPredictor()
-
-        tourism_value = tourism_predictor.predict(X=tourism_df)[0]
-
-        if tourism_value == 1:
-            results = "The Tourist bought the package"
-
-        else:
-            results = "The Tourist didn't buy the package"
-        return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "context": f"{results}"},
-        )
-
-    except Exception as e:
-        return {"status": False, "error": f"{e}"}
-
-
-@app.get("/train")
-async def trainRouteClient():
-    try:
-        train_pipeline = TrainPipeline()
-
-        train_pipeline.run_pipeline()
-
-        return Response("Training successful !!")
-
-    except Exception as e:
-        return Response(f"Error Occurred! {e}")
-
-
-if __name__ == "__main__":
-    app_run(app, host=APP_HOST, port=APP_PORT)
+import streamlit as st
+import openai
+
+# Set your OpenAI API key
+openai.api_key = 'API'
+
+# Function to read file content in chunks
+def read_file_in_chunks(file, chunk_size=4000):
+    """Read a file in chunks and decode bytes to string."""
+    content = ""
+    while True:
+        chunk = file.read(chunk_size)
+        if not chunk:
+            break
+        content += chunk.decode('utf-8')  # Decode bytes to string
+    return content
+
+# Function to convert CSS to Tailwind CSS using OpenAI API
+def convert_css_to_tailwind(css_chunk):
+    prompt = f"""
+    Transform the provided traditional CSS into Tailwind CSS. Ensure a thorough conversion while maintaining visual fidelity and responsiveness.
+
+    *CSS Code:*
+    {css_chunk}
+
+    *Instructions:*
+    - Convert the provided CSS to Tailwind CSS utility classes.
+    - Provide a list of Tailwind CSS classes that correspond to the original CSS classes.
+    """
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are an expert in converting CSS to Tailwind CSS."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1500,
+        temperature=0.5
+    )
+    
+    return response.choices[0].message['content'].strip()
+
+# Function to apply Tailwind CSS to HTML using OpenAI API
+def apply_tailwind_to_html(html_chunk, class_mapping):
+    class_mapping_str = "\n".join([f"{k} => {v}" for k, v in class_mapping.items()])
+    
+    prompt = f"""
+    Apply the provided Tailwind CSS classes to the existing HTML structure. Ensure the visual appearance and responsiveness are preserved.
+
+    *HTML Code:*
+    {html_chunk}
+
+    *Tailwind CSS Classes Mapping:*
+    {class_mapping_str}
+
+    *Instructions:*
+    - Replace old CSS class names in the HTML with the corresponding Tailwind utility classes.
+    - Ensure that the visual appearance and responsiveness are preserved as closely as possible.
+    """
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are an expert in applying Tailwind CSS to HTML."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=1500,
+        temperature=0.5
+    )
+    
+    return response.choices[0].message['content'].strip()
+
+# Streamlit UI
+st.title("CSS to Tailwind CSS Converter")
+
+uploaded_css_file = st.file_uploader("Upload CSS File", type=["css"])
+uploaded_html_file = st.file_uploader("Upload HTML File", type=["html"])
+
+if st.button("Convert"):
+    if uploaded_css_file is not None and uploaded_html_file is not None:
+        st.write("Processing files...")
+
+        # Read CSS and HTML files in chunks
+        css = read_file_in_chunks(uploaded_css_file)
+        html = read_file_in_chunks(uploaded_html_file)
+
+        # Split CSS into chunks
+        chunk_size = 4000
+        css_chunks = [css[i:i + chunk_size] for i in range(0, len(css), chunk_size)]
+        html_chunks = [html[i:i + chunk_size] for i in range(0, len(html), chunk_size)]
+
+        # Convert CSS chunks to Tailwind classes
+        tailwind_mapping = {}
+        for css_chunk in css_chunks:
+            mapping = convert_css_to_tailwind(css_chunk)
+            # Parse and aggregate Tailwind classes mapping
+            for line in mapping.split('\n'):
+                if '=>' in line:
+                    css_class, tailwind_class = map(str.strip, line.split('=>'))
+                    tailwind_mapping[css_class] = tailwind_class
+        
+        # Apply Tailwind CSS to HTML chunks
+        converted_html = ""
+        for html_chunk in html_chunks:
+            converted_html += apply_tailwind_to_html(html_chunk, tailwind_mapping)
+
+        st.write("Converted HTML with Tailwind CSS:")
+        st.code(converted_html, language='html')
+
+        # Save the converted HTML
+        st.download_button("Download Converted HTML", data=converted_html, file_name="converted.html", mime="text/html")
+    else:
+        st.warning("Please upload both CSS and HTML files to proceed.")
