@@ -39,7 +39,8 @@ def convert_css_to_tailwind(css_chunk):
         temperature=0.5
     )
     
-    return response.choices[0].message['content'].strip()
+    # Extracting the message content from the response
+    return response['choices'][0]['message']['content'].strip()
 
 # Function to apply Tailwind CSS to HTML using OpenAI API
 def apply_tailwind_to_html(html_chunk, class_mapping):
@@ -68,7 +69,8 @@ def apply_tailwind_to_html(html_chunk, class_mapping):
         temperature=0.5
     )
     
-    return response.choices[0].message['content'].strip()
+    # Extracting the message content from the response
+    return response['choices'][0]['message']['content'].strip()
 
 # Streamlit UI
 st.title("CSS to Tailwind CSS Converter")
