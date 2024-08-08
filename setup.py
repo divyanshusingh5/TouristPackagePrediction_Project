@@ -1,38 +1,35 @@
-Sure, here's a simple Python function that uses regular expressions to extract class names and their content from a CSS file. It reads the CSS file, finds all the class definitions, and stores them in a list named `chunks` with the class name as the key and the content as the value.
-
-```python
-import re
-
-def extract_css_classes(file_path):
-    chunks = []
-    
-    # Read the CSS file
+def split_css_to_chunks(file_path, max_chunk_size=3500):
     with open(file_path, 'r') as file:
         css_content = file.read()
+
+    chunks = []
+    start_index = 0
     
-    # Regular expression to match CSS class definitions
-    class_pattern = re.compile(r'\.([a-zA-Z0-9_-]+)\s*\{([^}]*)\}')
-    
-    # Find all matches in the CSS content
-    matches = class_pattern.findall(css_content)
-    
-    # Store the class names and content in chunks
-    for match in matches:
-        class_name, class_content = match
-        chunks.append({class_name: class_content.strip()})
+    while start_index < len(css_content):
+        # Determine the potential end of the chunk
+        end_index = start_index + max_chunk_size
+        
+        # If end_index goes beyond the content length, adjust it
+        if end_index >= len(css_content):
+            chunks.append(css_content[start_index:])
+            break
+        
+        # Find the last closing curly brace before or at the 3500th character
+        end_index = css_content.rfind('}', start_index, end_index) + 1
+        
+        # If no closing brace is found, adjust the end index to max_chunk_size
+        if end_index == 0:
+            end_index = start_index + max_chunk_size
+
+        # Add the chunk to the list
+        chunks.append(css_content[start_index:end_index])
+        
+        # Move the start_index to the end of the current chunk
+        start_index = end_index
     
     return chunks
 
 # Example usage:
-# file_path = 'path/to/your/cssfile.css'
-# result = extract_css_classes(file_path)
-# print(result)
-```
-
-Here's how this function works:
-1. It reads the entire content of the CSS file.
-2. It uses a regular expression to find all class definitions. The regular expression looks for patterns that start with a dot (`.`) followed by the class name, some optional whitespace, and then curly braces `{}` containing the class content.
-3. It finds all matches and extracts the class names and their corresponding content.
-4. It stores each class name and its content as a dictionary in the `chunks` list.
-
-You can call this function with the path to your CSS file, and it will return the list of class names and their content.
+# chunks = split_css_to_chunks('path/to/your/style.css')
+# for idx, chunk in enumerate(chunks):
+#     print(f"Chunk {idx+1}:\n{chunk}\n")
