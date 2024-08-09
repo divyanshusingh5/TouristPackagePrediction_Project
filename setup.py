@@ -1,35 +1,39 @@
-def split_css_to_chunks(file_path, max_chunk_size=3500):
-    with open(file_path, 'r') as file:
-        css_content = file.read()
+import cssutils
+import json
 
-    chunks = []
-    start_index = 0
+def extract_css_to_json(css_string):
+    # Initialize the CSS parser
+    parser = cssutils.CSSParser()
+    stylesheet = parser.parseString(css_string)
     
-    while start_index < len(css_content):
-        # Determine the potential end of the chunk
-        end_index = start_index + max_chunk_size
-        
-        # If end_index goes beyond the content length, adjust it
-        if end_index >= len(css_content):
-            chunks.append(css_content[start_index:])
-            break
-        
-        # Find the last closing curly brace before or at the 3500th character
-        end_index = css_content.rfind('}', start_index, end_index) + 1
-        
-        # If no closing brace is found, adjust the end index to max_chunk_size
-        if end_index == 0:
-            end_index = start_index + max_chunk_size
+    # Dictionary to store the extracted styles
+    css_dict = {}
 
-        # Add the chunk to the list
-        chunks.append(css_content[start_index:end_index])
-        
-        # Move the start_index to the end of the current chunk
-        start_index = end_index
+    # Iterate through the CSS rules
+    for rule in stylesheet:
+        if rule.type == rule.STYLE_RULE:
+            selector = rule.selectorText
+            styles = {}
+            for property in rule.style:
+                styles[property.name] = property.value
+            css_dict[selector] = styles
+
+    # Convert the dictionary to JSON
+    css_json = json.dumps(css_dict, indent=4)
     
-    return chunks
+    return css_json
 
-# Example usage:
-# chunks = split_css_to_chunks('path/to/your/style.css')
-# for idx, chunk in enumerate(chunks):
-#     print(f"Chunk {idx+1}:\n{chunk}\n")
+# Example usage
+css_string = """
+body {
+    background-color: #f0f0f0;
+    color: #333;
+}
+h1 {
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+"""
+
+css_json = extract_css_to_json(css_string)
+print(css_json)
