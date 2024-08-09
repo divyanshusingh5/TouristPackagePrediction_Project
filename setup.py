@@ -1,38 +1,32 @@
-import cssutils
-import json
+def merge_json_chunks(json_list, chunk_size=15):
+    # Flatten the list of JSON objects into a single list of dictionaries
+    merged_list = []
+    for json_obj in json_list:
+        merged_list.extend(json_obj)  # Assuming each JSON object in the list is a dictionary
 
-def extract_css_to_json(css_string):
-    # Initialize the CSS parser
-    parser = cssutils.CSSParser()
-    stylesheet = parser.parseString(css_string)
-    
-    # Dictionary to store the extracted styles
-    css_dict = {}
+    # Create chunks
+    chunks = []
+    index = 0
 
-    # Iterate through the CSS rules
-    for rule in stylesheet:
-        if rule.type == rule.STYLE_RULE:
-            selector = rule.selectorText
-            styles = {}
-            for property in rule.style:
-                styles[property.name] = property.value
-            css_dict[selector] = styles
+    while index < len(merged_list):
+        # Take a chunk of the specified size or the remaining items if fewer
+        chunk = merged_list[index:index + chunk_size]
+        chunks.append(chunk)
+        index += chunk_size
 
-    # Convert the dictionary to JSON
-    css_json = json.dumps(css_dict, indent=4)
-    
-    return css_json
+    return chunks
 
 # Example usage
-css_string = """
-body {
-    background-color: #f0f0f0;
-    color: #333;
-}
-h1 {
-    font-size: 2em;
-    margin-bottom: 0.5em;
-}
+json_list = [
+    [{"body": {"background-color": "#f0f0f0", "color": "#333"}}],
+    [{"h1": {"font-size": "2em", "margin-bottom": "0.5em"}}],
+    # Add more JSON objects here
+]
+
+chunks = merge_json_chunks(json_list)
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i + 1}:")
+    print(chunk)
 """
 
 css_json = extract_css_to_json(css_string)
