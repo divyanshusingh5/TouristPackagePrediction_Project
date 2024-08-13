@@ -1,101 +1,52 @@
-Please convert this CSS object into Tailwind CSS using utility classes. Be mindful of edge cases such as handling hidden elements, complex margin or padding values, and hover states:
-{
-    "body": { "font-family": "font-sans" },
-    "menu-bar": { "background": "bg-gray-200" },
-    ".hidden-element": { "display": "none" },
-    ".hover-state:hover": { "background": "bg-gray-300" }
-}
-Certainly! Here's a concise prompt to generate Tailwind CSS from a given CSS file while handling all the necessary cases, including arbitrary values:
+def getMaximumEfficiency(connect_nodes, connect_from, connect_to, computer_val, k):
+    from collections import defaultdict
 
----
+    # Step 1: Build the adjacency list for the tree
+    tree = defaultdict(list)
+    for u, v in zip(connect_from, connect_to):
+        tree[u-1].append(v-1)
+        tree[v-1].append(u-1)
+    
+    # Step 2: DFS to calculate subtree sums and maximize efficiency
+    def dfs(node, parent):
+        subtree_sum = computer_val[node]
+        for neighbor in tree[node]:
+            if neighbor != parent:
+                child_sum = dfs(neighbor, node)
+                if child_sum > 0:
+                    subtree_sum += child_sum
+        return subtree_sum
+    
+    # Start DFS from the root (node 0)
+    max_efficiency = -float('inf')
+    total_sum = dfs(0, -1)  # Compute sum of the whole tree
+    num_ops = 0
+    efficiency = total_sum - (k * num_ops)
+    max_efficiency = max(max_efficiency, efficiency)
+    
+    def maximize_dfs(node, parent):
+        nonlocal num_ops, max_efficiency
+        subtree_sum = computer_val[node]
+        for neighbor in tree[node]:
+            if neighbor != parent:
+                child_sum = maximize_dfs(neighbor, node)
+                if child_sum > 0:
+                    subtree_sum += child_sum
+        if subtree_sum < 0:
+            num_ops += 1
+            efficiency = (total_sum - subtree_sum) - (k * num_ops)
+            max_efficiency = max(max_efficiency, efficiency)
+        return subtree_sum
+    
+    maximize_dfs(0, -1)
+    
+    return max_efficiency
 
-**Prompt:**
+# Example usage:
+connect_nodes = 3
+connect_from = [1, 2]
+connect_to = [2, 3]
+computer_val = [9, -1, 3]
+k = 3
 
-"Convert the following CSS to Tailwind CSS classes. Use Tailwind's utility classes wherever possible, and handle custom values or complex CSS properties using Tailwind's arbitrary values (square brackets). Ensure that the output is concise and accurate, following Tailwind's conventions.
-
-CSS:
-```css
-{
-    "*": {
-        "padding": "0",
-        "margin": "0",
-        "box-sizing": "border-box"
-    },
-    "body": {
-        "background-image": "url('background.png')",
-        "background-size": "cover",
-        "background-position": "center",
-        "font-family": "sans-serif"
-    },
-    "menu-bar": {
-        "background": "#E5E7EB",
-        "text-align": "center"
-    },
-    "menu-bar ul": {
-        "display": "inline-flex",
-        "list-style": "none",
-        "color": "#319795"
-    },
-    "menu-bar ul li": {
-        "width": "120px",
-        "padding": "12px",
-        "margin": "12px"
-    },
-    "menu-bar ul li a": {
-        "text-decoration": "none",
-        "color": "#319795"
-    },
-    "active, .menu-bar ul li:hover": {
-        "background": "#D1D5DB",
-        "border-radius": "4px"
-    },
-    "menu-bar .fa-solid, .menu-bar .fa-brands": {
-        "margin-right": "8px"
-    },
-    "sub-menu-1": {
-        "display": "none"
-    },
-    "menu-bar ul li:hover .sub-menu-1": {
-        "display": "block",
-        "position": "absolute",
-        "margin-top": "14px",
-        "margin-left": "-14px",
-        "background": "#E5E7EB"
-    },
-    "menu-bar ul li:hover .sub-menu-1 ul": {
-        "display": "block",
-        "margin": "6px"
-    },
-    "menu-bar ul li:hover .sub-menu-1 ul li": {
-        "width": "152px",
-        "padding": "10px",
-        "border-bottom": "1px dotted #319795",
-        "background": "transparent",
-        "border-radius": "0",
-        "text-align": "left"
-    },
-    "menu-bar ul li:hover .sub-menu-1 ul li:last-child": {
-        "border-bottom": "none"
-    },
-    "menu-bar ul li:hover .sub-menu-1 ul li a:hover": {
-        "color": "#000000"
-    },
-    ".fa-angle-right": {
-        "float": "right"
-    },
-    ".sub-menu-2": {
-        "display": "none"
-    },
-    ".hover-me:hover .sub-menu-2": {
-        "position": "absolute",
-        "display": "block",
-        "margin-top": "-40px",
-        "margin-left": "140px",
-        "background": "#E5E7EB"
-    }
-}
-``` 
-
----
-
-This prompt directs the model to convert CSS to Tailwind CSS with an emphasis on using arbitrary values when necessary, ensuring accurate and concise output.
+print(getMaximumEfficiency(connect_nodes, connect_from, connect_to, computer_val, k))  # Output should be 11
