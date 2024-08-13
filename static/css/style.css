@@ -1,213 +1,73 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+2. Question 2
 
-:root {
-    --pink: #e84393;
-}
+There are n computer systems connected together to form a network. The network can be represented as a rooted tree (rooted at master computer 1), where the connections are described using two arrays connect_from[] and connect_to[]. Each pair (connect_from[i], connect_to[i]) denotes an undirected edge between the two computers. Additionally, each computer has a value assigned to it denoted by the array computer_val[].
 
-* {
-    @apply m-0 p-0 box-border font-sans transition-all duration-200;
-}
+In order to maximize the throughput of the network, certain inefficient systems can be removed. In one operation, any computer node can be chosen, and all computer nodes in its subtree including this node can be removed from the network. Let the number of such operations applied be num_ops.
 
-html {
-    @apply text-base scroll-smooth overflow-x-hidden;
-}
+For a given parameter k, the efficiency of the network after num_ops operations is calculated as: (sum of values of all remaining computer nodesk num_ops). Find the maximum possible efficiency after applying some (possibly zero) operations optimally.
 
-section {
-    @apply py-8 px-[9%];
-}
+Note: The node values can be negative.
 
-.heading {
-    @apply text-center text-4xl text-gray-800 py-4 my-8 bg-[rgba(255,51,153,.05)];
-}
+Example
 
-.heading span {
-    @apply text-[var(--pink)];
-}
+Consider the number of computers to be connect nodes = 4, and their connections to be connect from = [1, 2, 3], connect_to= [2, 3, 4). Also, consider the node values to be computer_val = [3, -7, -8, -9] and the given parameter to be k = 5. The given network can be represented as:
 
-.btn {
-    @apply inline-block mt-4 rounded-full bg-gray-800 text-white py-3.5 px-14 cursor-pointer text-lg;
-}
+it is optimal to remove the subtree rooted at node 2. Then, efficiency=3-(15)=-2, which is the maximum possible.
 
-.btn:hover {
-    @apply bg-[var(--pink)];
-}
+Hence, the answer is -2.
 
-header {
-    @apply fixed top-0 left-0 right-0 bg-white py-8 px-[9%] flex items-center justify-between z-50 shadow-md;
-}
+Function Description
 
-header .logo {
-    @apply text-3xl font-bold text-gray-800;
-}
+Complete the function getMaximumEfficiency in the editor below.
 
-header .logo span {
-    @apply text-[var(--pink)];
-}
+getMaximum Efficiency has the following parameters:
 
-header .navbar a {
-    @apply text-2xl px-6 text-gray-600 hover:text-[var(--pink)];
-}
+int connect_nodes, the number of nodes in the system int connect_from[connect_nodes-1): one node of the connecting edges int connect_to[connect_nodes-1]; the other node of the connecting edges int computer_val[connect_nodes]: the values of each computer node int k: the parameter for calculating efficiency
 
-header .icons a {
-    @apply text-2.5xl text-gray-800 ml-6 hover:text-[var(--pink)];
-}
+Returns
 
-header #toggler {
-    @apply hidden;
-}
+long int the maximum possible efficiency after an optimal number of operations
 
-header .fa-bars {
-    @apply text-3xl text-gray-800 rounded-md p-2 cursor-pointer border border-gray-300 hidden;
-}
+Constraints
 
-.home {
-    @apply flex items-center min-h-screen bg-cover bg-center;
-    background-image: url('home-bg.jpg');
-}
+2≤ connect nodes ≤ 105
 
-.home .content {
-    @apply max-w-[50rem];
-}
+1s connect from[i], connect_to[i]s connect_nodes
 
-.home .content h3 {
-    @apply text-6xl text-gray-800;
-}
+|computer_val[i]/ ≤109
 
-.home .content span {
-    @apply text-3.5xl text-[var(--pink)] py-4 leading-tight;
-}
+1≤k≤109
 
-.home .content p {
-    @apply text-lg text-gray-600 py-4 leading-relaxed;
-}
+The first line contains two space-separated integers, connect_nodes, the number of nodes in the tree, and connect_nodes - 1, the size of the arrays connect_from[] and connect to[].
 
-.about .row {
-    @apply flex items-center gap-8 flex-wrap py-8 pb-12;
-}
+Each line i of the (connect_nodes-1) subsequent lines (where 0 <= i < i connect_nodes - 1) contains 2 integers, connect_from[i] and connect_to[i] that denotes the r ^ (th) edge of the tree.
 
-.about .row .video-container {
-    @apply flex-1 max-w-[40rem] relative;
-}
+The next line contains an integer, connect_nodes, that denotes the number of elements in the array computer_val[].
 
-.about .row .video-container video {
-    @apply w-full border-[1.5rem] border-white rounded-md shadow-lg h-full object-cover;
-}
+Each line i of the connect_nodes subsequent lines (where 0 <= i < 1 connect_nodes) contains an integer that denotes computer_val[i].
 
-.about .row .video-container h3 {
-    @apply absolute top-1/2 left-0 right-0 -translate-y-1/2 text-3xl bg-white py-4 text-center;
-}
+eter for calculating The last line contains an integer, k, that denotes the given parameter
 
-.about .row .content {
-    @apply flex-1 max-w-[40rem];
-}
+efficiency.
 
-.about .row .content h3 {
-    @apply text-3xl text-gray-800;
-}
+▼Sample Case 0
 
-.about .row .content p {
-    @apply text-lg text-gray-600 py-2 pt-4 leading-relaxed;
-}
+Sample Input For Custom Testing
 
-.menu .box-container {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8;
-}
+STDIN
 
-.menu .box {
-    @apply p-6 border border-gray-300 rounded-md shadow-md;
-}
+32
 
-.menu .box img {
-    @apply w-full h-[20rem] object-cover rounded-md;
-}
+12
 
-.menu .box h3 {
-    @apply text-2xl text-gray-800 pt-4;
-}
+FUNCTION
 
-.menu .box .price {
-    @apply text-[var(--pink)] text-xl;
-}
+connect_nodes 3, (connect_nodes 1) = 2 connect_from = [1, 3] , connect_to = [2, 2]
 
-.menu .box .price span {
-    @apply text-sm line-through text-gray-500;
-}
+32 330 9 133 -1
 
-.contact .row {
-    @apply flex items-center gap-8 flex-wrap py-8 pb-12;
-}
+connect_nodes = 3 computer_val [9, -1, 3]
+k = 3
+Sample Output
 
-.contact .row iframe {
-    @apply w-full h-[30rem] rounded-md shadow-md;
-}
-
-.contact .row form {
-    @apply flex-1 p-6 border border-gray-300 rounded-md shadow-md;
-}
-
-.contact .row form .box {
-    @apply w-full p-3.5 my-2.5 text-lg text-gray-600 border border-gray-300 rounded-md;
-}
-
-/* Responsive Styles */
-@media (max-width: 991px) {
-    header {
-        @apply py-4 px-8;
-    }
-
-    section {
-        @apply px-8;
-    }
-
-    .heading {
-        @apply text-3xl;
-    }
-
-    .heading span {
-        @apply block;
-    }
-
-    header .fa-bars {
-        @apply block;
-    }
-
-    header .navbar {
-        @apply absolute top-full left-0 right-0 bg-white border-t border-gray-300 shadow-md hidden flex-col items-center;
-    }
-
-    header .navbar.active {
-        @apply flex;
-    }
-
-    .home .content {
-        @apply max-w-full text-center;
-    }
-
-    .home .content span {
-        @apply block;
-    }
-
-    .about .row {
-        @apply flex-col;
-    }
-
-    .about .row .video-container {
-        @apply max-w-full;
-    }
-
-    .about .row .content {
-        @apply max-w-full;
-    }
-
-    .contact .row {
-        @apply flex-col;
-    }
-}
-
-@media (max-width: 768px) {
-    .menu .box-container {
-        @apply grid-cols-1;
-    }
-    }
+11
