@@ -1,236 +1,134 @@
-import streamlit as st
-import openai
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException, StaleElementReferenceException
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+import csv
 
-# Set your OpenAI API key
-openai.api_key = 'API'
+# Set up Selenium options
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Run headless Chrome (optional)
+chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration (optional)
+chrome_options.add_argument("--no-sandbox")  # Disable sandboxing (optional)
 
-# Function to read file content in chunks
-def read_file_in_chunks(file, chunk_size=4000):
-    """Read a file in chunks and decode bytes to string."""
-    content = ""
-    while True:
-        chunk = file.read(chunk_size)
-        if not chunk:
-            break
-        content += chunk.decode('utf-8')  # Decode bytes to string
-    return content
+# Initialize the WebDriver using webdriver_manager
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-# Function to convert CSS to Tailwind CSS using OpenAI API
-def convert_css_to_tailwind(css_chunk):
-    prompt = f"""
-    Transform the provided traditional CSS into Tailwind CSS. Ensure a thorough conversion while maintaining visual fidelity and responsiveness.
-
-    *CSS Code:*
-    {css_chunk}
-
-    *Instructions:*
-    - Convert the provided CSS to Tailwind CSS utility classes.
-    - Provide a list of Tailwind CSS classes that correspond to the original CSS classes.
-    """
-    
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are an expert in converting CSS to Tailwind CSS."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=1500,
-        temperature=0.5
-    )
-    
-    return response.choices[0].message['content'].strip()
-
-# Function to apply Tailwind CSS to HTML using OpenAI API
-def apply_tailwind_to_html(html_chunk, class_mapping):
-    class_mapping_str = "\n".join([f"{k} => {v}" for k, v in class_mapping.items()])
-    
-    prompt = f"""
-    Apply the provided Tailwind CSS classes to the existing HTML structure. Ensure the visual appearance and responsiveness are preserved.
-
-    *HTML Code:*
-    {html_chunk}
-
-    *Tailwind CSS Classes Mapping:*
-    {class_mapping_str}
-
-    *Instructions:*
-    - Replace old CSS class names in the HTML with the corresponding Tailwind utility classes.
-    - Ensure that the visual appearance and responsiveness are preserved as closely as possible.
-    """
-    
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are an expert in applying Tailwind CSS to HTML."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=1500,
-        temperature=0.5
-    )
-    
-    return response.choices[0].message['content'].strip()
-
-# Streamlit UI
-st.title("CSS to Tailwind CSS Converter")
-
-uploaded_css_file = st.file_uploader("Upload CSS File", type=["css"])
-uploaded_html_file = st.file_uploader("Upload HTML File", type=["html"])
-
-if st.button("Convert"):
-    if uploaded_css_file is not None and uploaded_html_file is not None:
-        st.write("Processing files...")
-
-        # Read CSS and HTML files in chunks
-        css = read_file_in_chunks(uploaded_css_file)
-        html = read_file_in_chunks(uploaded_html_file)
-
-        # Split CSS into chunks
-        chunk_size = 4000
-        css_chunks = [css[i:i + chunk_size] for i in range(0, len(css), chunk_size)]
-        html_chunks = [html[i:i + chunk_size] for i in range(0, len(html), chunk_size)]
-
-        # Convert CSS chunks to Tailwind classes
-        tailwind_mapping = {}
-        for css_chunk in css_chunks:
-            mapping = convert_css_to_tailwind(css_chunk)
-            # Parse and aggregate Tailwind classes mapping
-            for line in mapping.split('\n'):
-                if '=>' in line:
-                    css_class, tailwind_class = map(str.strip, line.split('=>'))
-                    tailwind_mapping[css_class] = tailwind_class
-        
-        # Apply Tailwind CSS to HTML chunks
-        converted_html = ""
-        for html_chunk in html_chunks:
-            converted_html += apply_tailwind_to_html(html_chunk, tailwind_mapping)
-
-        st.write("Converted HTML with Tailwind CSS:")
-        st.code(converted_html, language='html')
-
-        # Save the converted HTML
-        st.download_button("Download Converted HTML", data=converted_html, file_name="converted.html", mime="text/html")
-    else:
-        st.warning("Please upload both CSS and HTML files to proceed.")
-
-######################################
-
-import streamlit as st
-import openai
-
-# Set your OpenAI API key
-
-# Function to read file content in chunks
-def read_file_in_chunks(file, chunk_size=4000):
-    """Read a file in chunks and decode bytes to string."""
-    content = ""
-    while True:
-        chunk = file.read(chunk_size)
-        if not chunk:
-            break
-        content += chunk.decode('utf-8')  # Decode bytes to string
-    return content
-
-# Function to convert CSS to Tailwind CSS using OpenAI API
-def convert_css_to_tailwind(css_chunk):
-    prompt = f"""
-    Transform the following traditional CSS into Tailwind CSS utility classes. Ensure the conversion is accurate, preserving visual fidelity and responsiveness.
-
-    CSS Code:
-    {css_chunk}
-
-    Instructions:
-    - Convert each CSS property to the appropriate Tailwind CSS utility class.
-    - For colors, ensure to use the closest Tailwind color.
-    - For background images and other properties not directly translatable to Tailwind, indicate how to handle them or suggest a Tailwind equivalent if available.
-    """
+def extract_code_from_link(link):
+    """Extracts code from the provided link."""
+    driver.get(link)
+    wait = WebDriverWait(driver, 10)
     
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are an expert in converting CSS to Tailwind CSS."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1500,
-            temperature=0.5
+        # Wait for the content with class 'my-4' to be present
+        content_element = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.my-4"))
         )
-        return response.choices[0].message['content'].strip()
-    except Exception as e:
-        st.error(f"Error converting CSS: {e}")
-        return ""
-
-# Function to apply Tailwind CSS to HTML using OpenAI API
-def apply_tailwind_to_html(html_chunk, class_mapping):
-    class_mapping_str = "\n".join([f"{k} => {v}" for k, v in class_mapping.items()])
-    
-    prompt = f"""
-    Apply the provided Tailwind CSS classes to the existing HTML structure. Ensure that all visual aspects and responsiveness are preserved.
-
-    HTML Code:
-    {html_chunk}
-
-    Tailwind CSS Classes Mapping:
-    {class_mapping_str}
-
-    Instructions:
-    - Replace old CSS class names in the HTML with the corresponding Tailwind utility classes.
-    - Ensure that background images, colors, and other CSS properties are handled correctly and visual appearance is preserved.
-    """
-    
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are an expert in applying Tailwind CSS to HTML."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1500,
-            temperature=0.5
-        )
-        return response.choices[0].message['content'].strip()
-    except Exception as e:
-        st.error(f"Error applying Tailwind CSS to HTML: {e}")
-        return ""
-
-# Streamlit UI
-st.title("CSS to Tailwind CSS Converter")
-
-uploaded_css_file = st.file_uploader("Upload CSS File", type=["css"])
-uploaded_html_file = st.file_uploader("Upload HTML File", type=["html"])
-
-if st.button("Convert"):
-    if uploaded_css_file is not None and uploaded_html_file is not None:
-        st.write("Processing files...")
-
-        # Read CSS and HTML files in chunks
-        css = read_file_in_chunks(uploaded_css_file)
-        html = read_file_in_chunks(uploaded_html_file)
-
-        # Split CSS into chunks
-        chunk_size = 4000
-        css_chunks = [css[i:i + chunk_size] for i in range(0, len(css), chunk_size)]
-        html_chunks = [html[i:i + chunk_size] for i in range(0, len(html), chunk_size)]
-
-        # Convert CSS chunks to Tailwind classes
-        tailwind_mapping = {}
-        for css_chunk in css_chunks:
-            mapping = convert_css_to_tailwind(css_chunk)
-            # Parse and aggregate Tailwind classes mapping
-            for line in mapping.split('\n'):
-                if '=>' in line:
-                    css_class, tailwind_class = map(str.strip, line.split('=>'))
-                    tailwind_mapping[css_class] = tailwind_class
         
-        # Apply Tailwind CSS to HTML chunks
-        converted_html = ""
-        for html_chunk in html_chunks:
-            converted_html += apply_tailwind_to_html(html_chunk, tailwind_mapping)
+        # Extract pre and code elements
+        pre_elements = content_element.find_elements(By.CSS_SELECTOR, "pre.language-html")
+        code_elements = content_element.find_elements(By.CSS_SELECTOR, "code.language-html")
+        
+        code_snippets = set()  # Use a set to avoid duplicates
+        for pre in pre_elements:
+            code_snippets.add(pre.text.strip())
+        for code in code_elements:
+            code_snippets.add(code.text.strip())
+        
+        return list(code_snippets)
 
-        st.write("Converted HTML with Tailwind CSS:")
-        st.code(converted_html, language='html')
+    except TimeoutException:
+        return [f"Timed out waiting for code snippets on {link}"]
+    except NoSuchElementException as e:
+        return [f"Element not found on {link}: {e}"]
+    except ElementClickInterceptedException as e:
+        return [f"Error clicking on element at {link}: {e}"]
+    except StaleElementReferenceException as e:
+        return [f"Stale element reference on {link}: {e}"]
 
-        # Save the converted HTML
-        st.download_button("Download Converted HTML", data=converted_html, file_name="converted.html", mime="text/html")
-    else:
-        st.warning("Please upload both CSS and HTML files to proceed.")
+# Define output file
+output_file = 'output.csv'
 
+# Base URL
+base_url = 'https://bootstrapshuffle.com/classes'
+
+# Initialize WebDriver (e.g., Chrome)
+driver.get(base_url)  # Navigate to the base URL
+
+# Create a WebDriverWait instance
+wait = WebDriverWait(driver, 10)
+
+# Counter for tracking card index
+card_index_counter = 0
+
+# Open CSV file for writing
+with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    
+    # Write CSV headers
+    csv_writer.writerow(['Card Header', 'List Group Item', 'Link', 'Code Snippet'])
+
+    while True:
+        try:
+            # Wait for card elements to be present
+            card_elements = wait.until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.card"))
+            )
+
+            if not card_elements:
+                break
+
+            # Process cards starting from the current counter index
+            for card_index in range(card_index_counter, len(card_elements)):
+                try:
+                    # Re-locate card header to avoid StaleElementReferenceException
+                    card_element = wait.until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, f"div.card:nth-of-type({card_index + 1})"))
+                    )
+                    card_header = card_element.find_element(By.CSS_SELECTOR, "h5.card-header").text
+
+                    # Extract list group items
+                    list_group_elements = card_element.find_elements(By.CSS_SELECTOR, "div.list-group.list-group-flush a")
+                    
+                    # Check if there are list group items
+                    if list_group_elements:
+                        list_group_items = [(item.text, item.get_attribute('href')) for item in list_group_elements]
+                    else:
+                        list_group_items = []
+
+                    for item_text, item_link in list_group_items:
+                        csv_writer.writerow([card_header, item_text, item_link, ""])  # Write row with empty code snippet
+
+                        if item_link:
+                            code_snippets = extract_code_from_link(item_link)
+                            for snippet in code_snippets:
+                                csv_writer.writerow([card_header, item_text, item_link, snippet])
+
+                    # Update the card index counter after successful processing
+                    card_index_counter = card_index + 1
+
+                except (NoSuchElementException, ElementClickInterceptedException) as e:
+                    csv_writer.writerow([f"Error processing card at index {card_index}"])
+                    # Move to the next card after an error
+                    card_index_counter = card_index + 1
+                    break
+
+                # Wait a bit before processing the next card
+                time.sleep(1)
+
+            # Break the loop if all cards have been processed
+            if card_index_counter >= len(card_elements):
+                break
+
+        except Exception as e:
+            # Log exception and navigate back to the base URL
+            csv_writer.writerow([f"Exception occurred: {e}. Navigating back to base URL."])
+            driver.get(base_url)
+            time.sleep(5)  # Wait a bit before retrying
+
+# Close the WebDriver
+driver.quit()
